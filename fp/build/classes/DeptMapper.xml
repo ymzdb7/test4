@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.crm.mapper.DeptMapper">
+	 <!-- 部门的结果集映射 -->
+	 <resultMap id="deptResult" type="com.crm.entity.Dept">
+        <id property="did" column="did"/><!-- 单位部门ID -->
+        <result property="dname" column="dname"/><!-- 部门名称 -->
+        <result property="descb" column="descb"/><!-- 部门描述 -->
+        <result property="ulevel" column="ulevel"/>
+        <result property="superDid" column="superDid"/>
+    </resultMap>
+    
+	<select id="getDeptNameById" parameterType="int" resultMap="deptResult">
+		select * from DEPT_CD where flag = 1 and did = #{did}
+	</select>
+    
+	<select id="getAllDept"  resultMap="deptResult">
+		select * from DEPT_CD where flag = 1
+	</select>
+
+	<select id="getDeptInfo" parameterType="java.util.Map" resultMap="deptResult">
+		select * from DEPT_CD where
+		flag = 1 limit #{startIndex},#{rows}
+	</select>
+
+	<select id="getAllLevel" resultType="com.crm.entity.Level" >
+		select * from LEVEL_CD
+	</select>
+	
+	<select id="getTotalDept" resultType="Integer">
+		select count(did) as total from DEPT_CD where flag =1
+	</select>
+	
+	<select id="getMaxDid" resultType="Integer">
+		select Max(did) as maxDid from DEPT_CD 
+	</select>
+
+	<select id="getSuperDept" parameterType="java.lang.Integer"  resultMap="deptResult">
+		select did,dname,ulevel from DEPT_CD where ulevel=#{cl};
+	</select>
+
+	<insert id="insertDept" parameterType="com.crm.entity.Dept" >
+		insert into
+		DEPT_CD (did,dname,ulevel,superDid,descb,flag)
+		values (#{did},#{dname},#{ulevel},#{superDid},#{descb},1)
+	</insert>
+
+    <update id="updateDept" parameterType="com.crm.entity.Dept">
+        update DEPT_CD
+        set  dname = #{dname} ,ulevel = #{ulevel} ,superDid = #{superDid} ,descb = #{descb} 
+        where did = #{did}
+    </update>
+
+    <select id="checkDeptIsUsed" parameterType="Integer" resultType="Integer">
+		select count(a.did) as cou from DEPT_CD a, USER_INFO b 
+		where a.flag = 1 and a.did=#{did} and b.isUsed = 1 and a.did = b.did
+	</select>
+	
+	<select id="getDeptList"  resultType="com.crm.entity.Dept">
+	  SELECT * FROM `dept_cd`where ulevel=2 and superDid=2
+	 
+	</select>
+	
+	<select id="getDeptVillaList" parameterType="Integer"  resultType="com.crm.entity.Dept">
+	  SELECT * FROM `dept_cd`where ulevel=1 and superDid=#{superDid}
+	</select>
+	
+
+	<delete id="deleteDept" parameterType="Integer" >
+        update DEPT_CD set flag=0 where did = #{did}
+    </delete>
+
+	<select id="getMaxOid" resultType="Integer">
+		select Max(oid) as maxOid from ORG_CD 
+	</select>
+
+	<insert id="insertOrg" parameterType="com.crm.entity.Org" >
+		insert into
+		ORG_CD (oid,oname,flag)
+		values (#{oid},#{oname},1)
+	</insert>
+
+    <update id="updateOrg" parameterType="com.crm.entity.Org">
+        update ORG_CD
+        set  oname = #{oname} 
+        where oid = #{oid}
+    </update>
+
+	<delete id="deleteOrg" parameterType="Integer" >
+        update ORG_CD set flag=0 where oid = #{oid}
+    </delete>
+
+</mapper>

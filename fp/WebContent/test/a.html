@@ -1,0 +1,68 @@
+<div style="margin:0 auto; width: 1000 px;" align="center">
+<form method="post" id="fm_edu_Assist">
+  <table id="edu_info" width="1000"  style="background:#000;"
+  			border="0" cellspacing="1" cellpadding="0">
+  	<tr style="background:#fff">
+  		<td><div  style='font-size:12px'>教育帮助对象：</div></td>
+  		<td>
+  			<input type="text" id="pname" name="pname"
+                            class="easyui-validatebox" validType="chinese" editable="false"
+                            data-options="required:'true',validType:'chinese'"/>
+                            &nbsp;<span style="color: red">*</span>
+            <a  href="javascript:selectHolder()" class="easyui-linkbutton"
+            iconCls="icon-remove" plain="true"><span id="ttt">选择对象</span></a>
+            <input type="text" id="pid" name="pid" value="0" 
+        		style="display:none" size=5/> 
+  		</td>
+  		<td><div  style='font-size:12px'>教育分段：</div></td>
+  		<td>
+  			<input name="eduPhaseType" class="easyui-combobox" 
+                            id="eduPhaseType" style="width: 154px;" editable="false"
+                            panelHeight="auto" required="true">
+							&nbsp;<span style="color: red">*</span>
+  		</td>
+  		<td><div  style='font-size:12px'>学校：</div></td>
+  		<td>
+  			<input type="text" id="school" name="school"
+                            class="easyui-validatebox" validType="chinese"
+                            data-options="validType:'chinese'"/>
+  		</td>
+  	</tr>
+  	<tr style="background:#fff">
+  		<td><div  style='font-size:12px'>班级：</div></td>
+  		<td>
+  			<input type="text" id="className" name="className"
+                            class="easyui-validatebox" />
+  		</td>
+  		<td><div  style='font-size:12px'>救助金额：</div></td>
+  		<td>
+  			<input type="text" id="cost" name="cost"
+                            class="easyui-validatebox" />
+  		</td>
+  		<td><div  style='font-size:12px'>发放日期：</div></td>
+  		<td>
+  			<input class="easyui-datebox"  type="text" 
+  					id="payment_time" name="payment_time"/>
+  		</td>
+  	</tr>
+  	<tr style="background:#fff">
+  		<td><div  style='font-size:12px'>说明：</div></td>
+  		<td colspan=5>
+            <textarea style='font-size:13px' id="descb" 
+                   name="descb" rows="1" cols="118" size=90></textarea>
+  		</td>
+  	</tr>
+  </table>
+</form>
+</div>
+
+<table border="1" cellspacing="0" bordercolor="#000000" width = "80%" style="border-collapse:collapse;">  
+    <tr>  
+        <td>1.1</td>  
+        <td>1.2</td>  
+    </tr>  
+    <tr>  
+        <td>2.1</td>  
+        <td>2.2</td>  
+    </tr>  
+   </table>  

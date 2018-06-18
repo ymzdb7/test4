@@ -1,0 +1,70 @@
+package com.crm.entity;
+
+public class EduAssistPresent extends EduAssist {
+
+    private int fid;
+    private String holderName;
+    private String pname;
+    private String phaseName;
+    private String paymentTime;
+    private String relationType;
+    private String relationTypeName;
+    
+
+	public String getPhaseName() {
+		return phaseName;
+	}
+
+	public void setPhaseName(String phaseName) {
+		this.phaseName = phaseName;
+	}
+
+	public int getFid() {
+		return fid;
+	}
+
+	public void setFid(int fid) {
+		this.fid = fid;
+	}
+
+	public String getHolderName() {
+		return holderName;
+	}
+
+	public void setHolderName(String holderName) {
+		this.holderName = holderName;
+	}
+
+	public String getPname() {
+		return pname;
+	}
+
+	public void setPname(String pname) {
+		this.pname = pname;
+	}
+
+	public String getPaymentTime() {
+		return paymentTime;
+	}
+
+	public void setPaymentTime(String paymentTime) {
+		this.paymentTime = paymentTime;
+	}
+
+	public String getRelationTypeName() {
+		return relationTypeName;
+	}
+
+	public void setRelationTypeName(String relationTypeName) {
+		this.relationTypeName = relationTypeName;
+	}
+
+	public String getRelationType() {
+		return relationType;
+	}
+
+	public void setRelationType(String relationType) {
+		this.relationType = relationType;
+	}
+	
+}

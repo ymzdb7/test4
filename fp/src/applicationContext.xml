@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:aop="http://www.springframework.org/schema/aop" 
+    xmlns:tx="http://www.springframework.org/schema/tx"
+    xmlns:context="http://www.springframework.org/schema/context"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans 
+    http://www.springframework.org/schema/beans/spring-beans.xsd 
+    http://www.springframework.org/schema/aop 
+    http://www.springframework.org/schema/aop/spring-aop.xsd 
+    http://www.springframework.org/schema/tx  
+    http://www.springframework.org/schema/tx/spring-tx.xsd 
+    http://www.springframework.org/schema/context  
+    http://www.springframework.org/schema/context/spring-context.xsd">
+    
+    
+    
+   <!-- 加载资源文件 其中包含连接数据库的常量信息(如driver url username password等)，必须在Spring配置文件的最前面加载，即第一个加载  -->
+   <!-- 创建数据源  方式一(不需要配置db.properties)-->
+    <!-- <context:property-placeholder location="classpath:jdbc.properties"/> -->
+    
+    <!--
+    <bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource"  
+        destroy-method="close">
+    	<property name="driverClassName" value="com.mysql.jdbc.Driver"></property>
+    	<property name="url" value="jdbc:mysql://192.168.137.21:3306/fp?useUnicode=true&amp;characterEncoding=UTF-8"></property>
+    	<property name="username" value="wwf"></property>
+    	<property name="password" value="123456"></property>
+    </bean> 
+    -->
+    
+     <!-- 创建数据源  方式二(需要配置db.properties,并且通过"${}"引用变量)
+     -->
+    <bean id="propertyConfigurer"     
+         class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">      
+     <property name="location" value="classpath:jdbc.properties"/>      
+	</bean>   
+	
+    <bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource"  
+        destroy-method="close">
+    	<property name="driverClassName" value="${driver}"></property>
+    	<property name="url" value="${url}"></property>
+    	<property name="username" value="${username}"></property>
+    	<property name="password" value="${password}"></property>
+    </bean>
+    
+
+ 	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <property name="dataSource" ref="dataSource"/>
+        <property name="configLocation" value="classpath:config.xml"/>
+        <property name="mapperLocations" value="classpath:*Mapper.xml"/>
+    </bean>
+    
+    <!-- 扫描mybatis映射接口类 
+    (MapperScannerConfigurer会自动扫描basePackage指定的包，找到映射接口类和映射XML文件，并进行注入)-->
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <property name="basePackage" value="com.crm.mapper"/>
+    </bean>
+    
+    <!-- 配置transactionManager事务管理器 -->
+    <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dataSource"></property>
+    </bean>
+    
+    <!-- 配置事务通知属性 -->
+    <tx:advice id="txAdvice" transaction-manager="transactionManager">
+        <!-- 定义事务传播特性 -->
+        <tx:attributes>
+            <tx:method name="insert" propagation="REQUIRED"/>
+            <tx:method name="update*" propagation="REQUIRED" />  
+            <tx:method name="edit*" propagation="REQUIRED" />  
+            <tx:method name="save*" propagation="REQUIRED" />  
+            <tx:method name="add*" propagation="REQUIRED" />  
+            <tx:method name="new*" propagation="REQUIRED" />  
+            <tx:method name="set*" propagation="REQUIRED" />  
+            <tx:method name="remove*" propagation="REQUIRED" />  
+            <tx:method name="delete*" propagation="REQUIRED" />  
+            <tx:method name="change*" propagation="REQUIRED" />  
+            <tx:method name="check*" propagation="REQUIRED" />  
+            <tx:method name="get*" propagation="REQUIRED" read-only="true" />  
+            <tx:method name="find*" propagation="REQUIRED" read-only="true" />  
+            <tx:method name="load*" propagation="REQUIRED" read-only="true" />  
+            <tx:method name="*" propagation="REQUIRED" read-only="true" />  
+        </tx:attributes>
+    </tx:advice>
+    
+    <!-- 配置事物切面 -->
+    <aop:config>
+        <aop:pointcut expression="execution(* com.crm.service.*.*(..))" id="serviceOperation"/>
+        <aop:advisor advice-ref="txAdvice" pointcut-ref="serviceOperation"/>
+    </aop:config>
+    
+</beans>

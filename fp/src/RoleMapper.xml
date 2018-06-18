@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.crm.mapper.RoleMapper">
+
+	<!-- 用户角色的结果集映射 -->
+	<resultMap id="getRole" type="com.crm.entity.Role">
+		<id property="rid" column="RID" /><!-- 角色ID -->
+		<result property="rname" column="rname" /><!-- 角色名称 -->
+	</resultMap>
+
+	<!-- 用户角色的结果集映射 -->
+	<resultMap id="menuListMap" type="com.crm.entity.Menu">
+		<id property="mid" column="mid" /><!-- 菜单ID -->
+		<result property="mname" column="mname" /><!-- 菜单名称 -->
+		<result property="parentid" column="parent_id" /><!-- 父菜单 -->
+		<result property="murl" column="murl" /><!-- url -->
+	</resultMap>
+
+	<select id="getTotalRole" resultType="Integer">
+		select count(rid)
+		from ROLE_MNG where flag=1
+	</select>
+	
+	<select id="getRoleList" parameterType="java.util.Map"
+		resultType="com.crm.entity.Role">
+		select * from ROLE_MNG where flag=1 limit #{startIndex},#{rows};
+	</select>
+
+	<select id="checkRoleIsUsed" parameterType="Integer" resultType="Integer">
+		select count(a.rid) as cou from ROLE_MNG a, USER_INFO b 
+		where a.flag = 1 and a.rid=#{rid} and b.isUsed = 1 and a.rid = b.rid
+	</select>
+
+	<select id="getTopRoleID" resultType="Integer">
+		select max(rid) from ROLE_MNG
+	</select>
+
+	<select id="getAllMenuList" resultType="Integer" resultMap = "menuListMap"  flushCache="true">
+		select mid,mname,parent_id from MENU_MNG order by mid
+	</select>
+	
+	<select id="getPowerRoleListByRid" parameterType="Integer" 
+		resultType="com.crm.entity.MenuRoleMap">
+		select rid,mid,descb from MENU_ROLE_MNG where flag = 1 and rid= #{rid};
+	</select>
+
+	<insert id="insertRole" parameterType="com.crm.entity.Role" >
+		insert into
+		ROLE_MNG (rid,rname,flag)
+		values (#{rid},#{rname},1)
+	</insert>
+	
+    <update id="updateRole" parameterType="com.crm.entity.Role">
+        update ROLE_MNG
+        set
+            rname = #{rname} 
+        where rid = #{rid}
+    </update>
+    
+    <!-- 
+	<update id="deleteMenuRoleMap" parameterType="java.util.Map" >
+		update MENU_ROLE_MNG set flag=0 where rid=${rid} and mid in
+		<foreach item="item" index="index" collection="mids" 
+			open="(" separator="," close=")">
+			#{item}
+		</foreach>
+	</update>
+	 -->
+	
+	<insert id="insertMenuRoleMap" parameterType="list">   
+    	insert into MENU_ROLE_MNG(rid,mid,flag) 
+   	 	values  
+    	<foreach collection="list" item="item" index="index" separator="," >  
+        	(#{item.rid},#{item.mid},1)  
+    	</foreach>  
+	</insert>  
+
+    <delete id="deleteMenuRoleMap" parameterType="java.util.Map" >
+        delete from MENU_ROLE_MNG where rid = #{rid} 
+    </delete>
+    
+    <delete id="deleteRole" parameterType="Integer" >
+        update ROLE_MNG set flag=0 where rid = #{rid}
+    </delete>
+    
+</mapper>

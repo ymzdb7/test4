@@ -1,0 +1,515 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.crm.mapper.UserMapper">
+	<!-- 用户信息的结果集映射 -->
+	<resultMap type="com.crm.entity.UserInfo" id="userResult">
+		<id property="pid" column="pid" /><!-- 用户ID -->
+		<result property="fid" column="fid" /><!-- 家庭信息ID -->
+		<result property="did" column="did" /><!-- 所属单位部门ID -->
+		<result property="rid" column="rid" /><!-- 角色ID -->
+		<result property="pname" column="pname" /><!-- 用户名称 -->
+		<result property="sex" column="sex" /><!-- 性别 -->
+		<result property="relationType" column="relationType" /><!-- 与户主关系 -->
+		<result property="cid" column="cid" /><!-- 身份证号码 -->
+		<result property="workType" column="workType" /><!-- 就业类型 -->
+		<result property="marriedType" column="marriedType" /><!-- 是否结婚 -->
+		<result property="phone" column="phone" /><!-- 用户电话 -->
+		<result property="healthyType" column="healthyType" /><!-- 健康类型 -->
+		<result property="isHolder" column="isHolder" /><!-- 是否户主 -->
+		<result property="faddr" column="faddr" /><!-- 家庭住址 -->
+		<result property="oTime" column="oTime" /><!-- 用户操作时间 -->
+		<result property="duty" column="duty" /><!-- 用户职务 1-管理用户，9-帮扶对象 -->
+		<result property="descb" column="descb" /><!-- 所属单位部门ID -->
+	</resultMap>
+
+	<!-- 级别的结果集映射 -->
+	<resultMap id="getLevel" type="com.crm.entity.Level">
+		<id property="ulevel" column="ulevel" /><!-- 单位部门级别ID -->
+		<result property="dlname" column="dlname" /><!-- 部门级别名称，1-村级、2-乡镇级、3-区县级、4-地市级 -->
+	</resultMap>
+
+	<!-- 获取菜单的结果集映射 -->
+	<resultMap id="menuResultMap" type="com.crm.entity.Menu">
+		<id property="mid" column="MID" />
+		<result property="mname" column="mname" />
+		<result property="murl" column="murl" />
+		<result property="parentid" column="parent_id" />
+	</resultMap>
+
+	<select id="checkLoginUser" parameterType="java.util.Map"
+		resultType="com.crm.entity.UserInfoPresent">
+		select
+			pid,did,rid,oid,pname,sex,relationType,cid,workType,marriedType,phone,
+			healthyType,isHolder,faddr,oTime,descb
+		from USER_INFO 
+		where phone = #{phone} and upwd= #{upwd} and isUsed=1 
+	</select>
+
+	<select id="loginUserInfo" parameterType="java.util.Map"
+		resultType="com.crm.entity.UserInfoPresent">
+		select d.pid ,d.fid ,d.pname ,d.did ,b.dname ,d.rid ,f.rname ,d.oid ,c.oname ,d.sex ,
+			if(d.sex="F","女","男") as sexName ,d.relationType ,e.type_name as relationTypeName 
+			,d.cid,d.workType ,g.type_name as workTypeName ,d.marriedType
+			,(case d.marriedType when 0 then "未婚"
+				when 1 then "已婚"
+			else "未知" end) as marriedTypeName
+			,d.phone ,d.healthyType ,h.type_name as healthyTypeName
+			,d.isHolder ,d.holderName ,d.faddr ,d.oTime ,d.descb
+		from 
+		(	select  t1.pid ,t1.isHolder as fid ,t1.pname ,t1.did ,t1.rid ,t1.oid ,t1.sex ,t1.relationType ,
+				t1.cid ,t1.workType ,t1.marriedType ,t1.phone ,t1.healthyType ,t1.isHolder ,t1.faddr ,
+				t1.oTime ,t1.descb ,t2.holderName 
+			from	
+				(select a1.pid,a1.isHolder as fid,a1.pname,a1.did,a1.rid,a1.oid,a1.sex,a1.relationType
+					,a1.cid,a1.workType,a1.marriedType,a1.phone,a1.healthyType,a1.isHolder ,a1.faddr ,a1.oTime ,a1.descb
+				from USER_INFO a1
+				where a1.phone = #{phone} and a1.upwd=#{upwd}  and a1.isUsed=1 ) t1
+			left join 
+				(select  a2.pid ,a2.pname as holderName from USER_INFO a2
+				where a2.isUsed=1  and a2.isHolder = a2.pid) t2
+			on t1.isHolder=t2.pid 	) d
+		left join DEPT_CD b on b.did=d.did
+		left join ORG_CD c on c.oid = d.oid 
+		left join RELATION_CD e on d.relationType = e.id
+		left join ROLE_MNG f on d.rid = f.rid
+		left join WORK_CD g on d.workType = g.id
+		left join HEALTHY_CD h on d.healthyType =h.id
+	</select>
+	
+	<select id="checkPwd" parameterType="java.util.Map"
+		resultType="com.crm.entity.UserInfo">
+		select *
+		from USER_INFO 
+		where phone = #{phone} and upwd= #{upwd} and isUsed=1
+	</select>
+	
+	<!-- 得到指定用户的菜单权限 -->
+	<select id="getPowerMenu" parameterType="int" resultMap="menuResultMap"  flushCache="true">
+		select a.mid,a.mname,a.murl,a.parent_id from MENU_MNG a, MENU_ROLE_MNG b,
+		USER_INFO c
+		where c.rid=b.rid and a.mid=b.mid and b.flag=1 and c.isUsed=1 and c.pid=
+		#{pid}
+	</select>
+
+	<select id="getUserInfoByPid" parameterType="int" resultType="com.crm.entity.UserInfoPresent" >
+		select * from USER_INFO where isUsed=1 and pid = #{pid}
+	</select>
+
+	<select id="getUserInfo" parameterType="list" resultType="com.crm.entity.UserInfoPresent" >
+		select * from USER_INFO where isUsed=1 and pid = #{pid}
+	</select>
+
+	<select id="getUserInfo1" parameterType="int" resultType="com.crm.entity.UserInfo" >
+		select * from USER_INFO where isUsed=1 and did = #{did}
+	</select>
+	
+
+	<!-- 根据个人id号获得用户姓名 -->
+	<select id="geAllUserPidPName" resultType="com.crm.entity.UserInfo">
+		select pid, pname from USER_INFO where isUsed=1 
+	</select>
+
+	<select id="getTotalMngUser" parameterType="java.util.Map" resultType="int">
+		select count(pid) AS comt from USER_INFO where isUsed=1 
+           <if test=" 1 != allUser">
+              and isHolder=#{allUser} 
+           </if>
+		<if test=" null != did">
+			and did in
+			<foreach item="item" index="index" collection="did" 
+				open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+	</select>
+
+	<select id="getAllMngUserInfo" parameterType="java.util.Map"
+		resultType="com.crm.entity.UserInfo"  flushCache="true">
+		select * from USER_INFO where isUsed=1 
+           <if test=" 1 != allUser">
+              and isHolder=#{allUser} 
+           </if>
+		<if test=" null != did">
+			and did in
+			<foreach item="item" index="index" collection="did" 
+				open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		limit #{startIndex},#{rows}
+	</select>
+
+	<select id="getTotalUser" parameterType="java.util.Map" resultType="int">
+		select count(pid) AS comt from USER_INFO where isUsed=1 
+		and isHolder not in (0) 
+		<if test=" null != did">
+			 and did in
+			<foreach item="item" index="index" collection="did" 
+				open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+	</select>
+
+	<select id="getTotalUserByHolder" parameterType="java.util.Map" resultType="int">
+		select count(pid) AS comt from USER_INFO where isUsed=1 
+		and isHolder=#{isHolder} and isHolder not in (0)
+		<if test=" null != did">
+			 and did in
+			<foreach item="item" index="index" collection="did" 
+				open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+	</select>
+
+	<select id="getTotalHolder" parameterType="java.util.Map" resultType="int">
+		select count(pid) AS comt from USER_INFO where isUsed=1 and isHolder not in (0)  
+		and pid = isHolder
+		<if test=" null != did">
+			 and did in
+			<foreach item="item" index="index" collection="did" 
+				open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+	</select>
+
+	<select id="getSearchCustomerInfo" parameterType="java.util.Map"
+		resultType="com.crm.entity.UserInfoPresent" >
+		select d.pid ,d.fid ,d.pname ,d.did ,b.dname ,d.rid ,f.rname ,d.oid ,c.oname ,d.sex ,
+			d.sex as sexName ,d.relationType ,e.type_name as relationTypeName 
+			,d.cid,d.workType ,g.type_name as workTypeName ,d.marriedType
+			,d.marriedType as marriedTypeName
+			,d.phone ,d.healthyType ,h.type_name as healthyTypeName
+			,d.isHolder ,d.holderName ,d.faddr ,d.oTime ,d.descb
+		from 
+		(	select  t1.pid ,t1.isHolder as fid ,t1.pname ,t1.did ,t1.rid ,t1.oid ,t1.sex ,t1.relationType ,
+				t1.cid ,t1.workType ,t1.marriedType ,t1.phone ,t1.healthyType ,t1.isHolder ,t1.faddr ,
+				t1.oTime ,t1.descb ,t2.holderName 
+			from	
+				(select a1.pid,a1.isHolder as fid,a1.pname,a1.did,a1.rid,a1.oid,a1.sex,a1.relationType
+					,a1.cid,a1.workType,a1.marriedType,a1.phone,a1.healthyType,a1.isHolder ,a1.faddr ,a1.oTime ,a1.descb
+				from USER_INFO a1
+				where  a1.isUsed=1 and isHolder not in (0) 
+					<if test=" null != did">
+						and a1.did in
+						<foreach item="item" index="index" collection="did" 
+							open="(" separator="," close=")">
+							#{item}
+						</foreach>
+					</if>
+					<if test=" 'true' == isHolder">
+					 	and isHolder = pid  
+					</if>
+					<if test=" 1 == si.cb_searchhealthyType">
+						and  healthyType = #{si.searchhealthyType}
+					</if>
+					<if test=" 1 == si.cb_searchmarriedType">
+						and  marriedType = #{si.searchmarriedType}
+					</if>
+					<if test=" 1 == si.cb_searchworkType">
+						and  workType = #{si.searchworkType}
+					</if>
+					<if test=" 1 == si.cb_searchrelationType">
+						and  relationType = #{si.searchrelationType}
+					</if>
+					<if test=" 1 == si.cb_searchsex">
+						and  sex = #{si.searchsex}
+					</if>
+					<if test=" 1 == si.cb_searchdid">
+						and  did = #{si.searchdid}
+					</if>
+					<if test=" 1 == si.cb_searchcid">
+						and  cid = #{si.searchcid}
+					</if>
+					<if test=" 1 == si.cb_searchphone">
+						and  phone = #{si.searchphone}
+					</if>
+					<if test=" 1 == si.cb_searchpname ">
+						and  pname like CONCAT('%',#{si.searchpname},'%')
+					</if>
+					<if test=" 1 == si.cb_searchfaddr">
+						and  faddr like CONCAT('%',#{si.searchfaddr},'%')
+					</if>
+					) t1
+			left join 
+				(select  a2.pid ,a2.pname as holderName from USER_INFO a2
+				where a2.isUsed=1  and a2.isHolder = a2.pid) t2
+			on t1.isHolder=t2.pid 	) d
+		left join DEPT_CD b on b.did=d.did
+		left join ORG_CD c on c.oid = d.oid 
+		left join RELATION_CD e on d.relationType = e.id
+		left join ROLE_MNG f on d.rid = f.rid
+		left join WORK_CD g on d.workType = g.id
+		left join HEALTHY_CD h on d.healthyType =h.id
+		limit #{startIndex},#{rows}
+	</select>
+
+	<select id="getTotalSearchCustomerInfo" parameterType="java.util.Map"
+		resultType="int" >
+		select count(pid)
+		from USER_INFO where isUsed=1 and isHolder not in (0) 
+		<if test=" null != did">
+			and did in
+			<foreach item="item" index="index" collection="did" 
+				open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test=" 'true' == isHolder">
+		 	and isHolder = pid  
+		</if>
+		<if test=" 1 == si.cb_searchhealthyType">
+			and  healthyType = #{si.searchhealthyType}
+		</if>
+		<if test=" 1 == si.cb_searchmarriedType">
+			and  marriedType = #{si.searchmarriedType}
+		</if>
+		<if test=" 1 == si.cb_searchworkType">
+			and  workType = #{si.searchworkType}
+		</if>
+		<if test=" 1 == si.cb_searchrelationType">
+			and  relationType = #{si.searchrelationType}
+		</if>
+		<if test=" 1 == si.cb_searchsex">
+			and  sex = #{si.searchsex}
+		</if>
+		<if test=" 1 == si.cb_searchdid">
+			and  did = #{si.searchdid}
+		</if>
+		<if test=" 1 == si.cb_searchcid">
+			and  cid = #{si.searchcid}
+		</if>
+		<if test=" 1 == si.cb_searchphone">
+			and  phone = #{si.searchphone}
+		</if>
+		<if test=" 1 == si.cb_searchpname ">
+			and  pname like CONCAT('%',#{si.searchpname},'%')
+		</if>
+		<if test=" 1 == si.cb_searchfaddr ">
+			and  faddr like CONCAT('%',#{si.searchfaddr},'%')
+		</if>
+	</select>
+
+	<select id="getSearchCustomerInfoForApp" parameterType="java.util.Map"
+		resultType="com.crm.entity.UserInfoPresent" >
+		select d.pid ,d.fid ,d.pname ,d.did ,b.dname ,d.rid ,f.rname ,d.oid ,c.oname ,d.sex ,
+			d.sex as sexName ,d.relationType ,e.type_name as relationTypeName 
+			,d.cid,d.workType ,g.type_name as workTypeName ,d.marriedType
+			,d.marriedType as marriedTypeName
+			,d.phone ,d.healthyType ,h.type_name as healthyTypeName
+			,d.isHolder ,d.holderName ,d.faddr ,d.oTime ,d.descb
+		from 
+		(	select  t1.pid ,t1.isHolder as fid ,t1.pname ,t1.did ,t1.rid ,t1.oid ,t1.sex ,t1.relationType ,
+				t1.cid ,t1.workType ,t1.marriedType ,t1.phone ,t1.healthyType ,t1.isHolder ,t1.faddr ,
+				t1.oTime ,t1.descb ,t2.holderName 
+			from	
+				(select a1.pid,a1.isHolder as fid,a1.pname,a1.did,a1.rid,a1.oid,a1.sex,a1.relationType
+					,a1.cid,a1.workType,a1.marriedType,a1.phone,a1.healthyType,a1.isHolder ,a1.faddr ,a1.oTime ,a1.descb
+				from USER_INFO a1
+				where  a1.isUsed=1 
+				<if test=" 'false' == isHolder">
+					and a1.isHolder not in (0) 
+				</if>
+				<if test=" 'true' == isHolder">
+					and a1.isHolder = a1.pid
+				</if>
+						and (	a1.cid like CONCAT('%',#{searchPara},'%') 
+								or 
+								a1.phone like CONCAT('%',#{searchPara},'%') 
+								or 
+								a1.pname like CONCAT('%',#{searchPara},'%')
+							)
+					) t1
+			left join 
+				(select  a2.pid ,a2.pname as holderName from USER_INFO a2
+				where a2.isUsed=1  and a2.isHolder = a2.pid) t2
+			on t1.isHolder=t2.pid 	
+		) d
+		left join DEPT_CD b on b.did=d.did
+		left join ORG_CD c on c.oid = d.oid 
+		left join RELATION_CD e on d.relationType = e.id
+		left join ROLE_MNG f on d.rid = f.rid
+		left join WORK_CD g on d.workType = g.id
+		left join HEALTHY_CD h on d.healthyType =h.id
+		limit #{startIndex},#{rows}
+	</select>
+
+	<select id="getTotalSearchCustomerInfoForApp" parameterType="java.util.Map"
+		resultType="int" >
+		select count(pid)
+		from USER_INFO where isUsed=1 and isHolder not in (0) 
+			and (	cid like CONCAT('%',#{searchPara},'%') 
+					or 
+					phone like CONCAT('%',#{searchPara},'%') 
+					or 
+					pname like CONCAT('%',#{searchPara},'%')
+				)
+	</select>
+
+	<select id="getAllCustomerInfo" parameterType="java.util.Map"
+		resultType="com.crm.entity.UserInfo"  flushCache="true">
+		select *
+		from USER_INFO where isUsed=1 and isHolder not in (0)  
+		<if test=" null != did">
+			and  did in
+			<foreach item="item" index="index" collection="did" 
+				open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		limit #{startIndex},#{rows}
+	</select>
+
+	<select id="getAllCustomerInfoByHolder" parameterType="java.util.Map"
+		resultType="com.crm.entity.UserInfo"  flushCache="true">
+		select *
+		from USER_INFO where isUsed=1 and isHolder=#{isHolder} 
+		and isHolder not in (0) 
+		<if test=" null != did">
+			 and  did in
+			<foreach item="item" index="index" collection="did" 
+				open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		limit #{startIndex},#{rows}
+	</select>
+
+	<select id="getFamilyAmount" parameterType="java.util.Map"
+		resultType="com.crm.entity.HolderInfoPresent"  flushCache="true">
+		select isHolder,count(*) as amount
+		from USER_INFO where isUsed=1
+        <if test=" null != pid">
+			 and isHolder in
+			<foreach item="item" index="index" collection="pid" 
+				open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		group by isHolder
+	</select>
+
+	<select id="getAllHolderInfo" parameterType="java.util.Map"
+		resultType="com.crm.entity.UserInfo"  flushCache="true">
+		select *
+		from USER_INFO where isUsed=1 and isHolder not in (0)  and pid = isHolder
+		<if test=" null != did">
+			 and did in
+			<foreach item="item" index="index" collection="did" 
+				open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		limit #{startIndex},#{rows}
+	</select>
+
+	<select id="getHoldersByDids" parameterType="java.util.Map"
+		resultType="com.crm.entity.HolderInfo">
+		select pid as hid,pname as hname
+		from USER_INFO where isUsed=1 and isHolder = pid
+		<if test=" null != did">
+			and did in
+			<foreach item="item" index="index" collection="did" 
+				open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+	</select>
+	
+	<select id="getOrgByOid" parameterType="int" resultType="com.crm.entity.Org">
+		select oid,oname from ORG_CD where flag=1 and oid=#{oid}
+	</select>
+	
+	<select id="getOrg" resultType="com.crm.entity.Org">
+		select oid,oname from ORG_CD where flag=1
+	</select>
+	<select id="getOrg1" resultType="com.crm.entity.Org">
+		select oid,oname from ORG_CD where flag=1 and contype_id=#{conTypeId}
+	</select>
+	<select id="getOrg2" resultType="com.crm.entity.Org">
+		select oid,oname from ORG_CD where flag=1 and contype_id=#{conTypeId}
+	</select>
+	
+	<!-- 使用mybatis做持久层时，insert、update、delete， sql语句默认是不返回被操作记录主键的，而是返回被操作记录条数； -->
+	<insert id="addCustomer"  useGeneratedKeys="true" keyProperty="pid"
+		parameterType="com.crm.entity.UserInfo">
+		insert into
+		USER_INFO(did,rid,oid,pname,sex,relationType,cid,workType,marriedType,phone,
+		healthyType,isHolder,faddr,oTime,descb,isUsed,upwd)
+		value
+		(#{did},#{rid},#{oid},#{pname},#{sex},#{relationType},#{cid},#{workType},#{marriedType},#{phone},
+		#{healthyType},#{isHolder},#{faddr},now(),#{descb},1,'123456')
+	</insert>
+	
+    <update id="updatePwd" parameterType="java.util.Map" >
+        update USER_INFO set upwd=#{upwd} where pid = #{pid}
+    </update>		
+    
+    <update id="updateCustomerIsHolder" parameterType="com.crm.entity.UserInfo" >
+        update USER_INFO set isHolder=#{isHolder} where pid = #{pid}
+    </update>
+    
+    <update id="updatePhone" parameterType="java.util.Map" >
+        update USER_INFO set phone=#{newPhone} where phone = #{oldPhone}
+    </update>
+  
+    <update id="deleteCustomer" parameterType="com.crm.entity.UserInfo" >
+        update USER_INFO set isUsed=0 where pid = #{pid}
+    </update>
+
+    <update id="saveRoleUserMap" parameterType="java.util.Map" >
+        update USER_INFO set rid=#{rid} where pid = #{pid}
+    </update>
+
+    <update id="updateCustomer" parameterType="com.crm.entity.UserInfo" >
+        update USER_INFO set did=#{did}, pname=#{pname},sex=#{sex},relationType=#{relationType},
+        cid=#{cid},workType=#{workType},marriedType=#{marriedType},phone=#{phone},healthyType=#{healthyType},
+        isHolder=#{isHolder},faddr=#{faddr},oTime=now(),descb=#{descb} ,oid=#{oid}
+        where pid = #{pid}
+    </update>
+    
+	<select id="checkCidDup" parameterType="com.crm.entity.UserInfo" resultType="Integer">
+		select count(pid) from USER_INFO  where isUsed=1 
+            <if test=" null != cid">
+                and cid=#{cid}
+            </if>
+            <if test=" 0 != pid">
+                and pid != #{pid}
+            </if>
+	</select>
+    
+	<select id="checkPhoneDup" parameterType="com.crm.entity.UserInfo" resultType="Integer">
+		select count(pid) from USER_INFO where isUsed=1 
+            <if test=" null != phone">
+                and phone=#{phone}
+            </if>
+            <if test=" 0 != pid">
+                and pid != #{pid}
+            </if>	
+	</select>
+	
+	<select id="getDidByPid" parameterType="int" resultType="Integer">
+		select did from USER_INFO where isUsed=1 
+        and pid = #{pid}
+	</select>
+	
+	<select id="getOidByPid" parameterType="int" resultType="int">
+		select oid from USER_INFO where isUsed=1 
+        and pid = #{pid}
+	</select>
+
+	<select id="getAppVersion" resultType="com.crm.entity.AppInfo">
+		select * from APP_VERSION where add_time=(select max(add_time) from APP_VERSION);
+	</select>
+
+	<insert id="setAppVersion" parameterType="com.crm.entity.AppInfo">
+		insert into
+		APP_VERSION(version,version_desc,version_name,link,forcedup,add_time,update_time)
+		value
+		(#{version},#{version_desc},#{version_name},#{link},#{forcedup},now(),now())
+	</insert>	
+</mapper>

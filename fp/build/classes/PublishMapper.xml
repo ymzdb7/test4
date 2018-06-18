@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.crm.mapper.PublishMapper">
+    <insert id="savePublishInfo" parameterType="com.crm.entity.PublishInfo">
+        insert into PUBLISH_INFO(oid,title,content,typeId,attachmentId,pubTime)
+        value(#{oid},#{title},#{content},#{typeId},#{attachmentId},now())
+    </insert>
+    
+    <update id="stopPublish" parameterType="java.util.Map">
+        update PUBLISH_INFO set stopFlag=#{stopFlag}
+        where id=#{id}
+    </update>
+
+    <update id="deletePublish" parameterType="int">
+        update PUBLISH_INFO set flag=0,stopFlag=0
+        where id=#{id}
+    </update>
+    
+    <update id="updatePublishInfo" parameterType="com.crm.entity.PublishInfoPresent">
+        update PUBLISH_INFO set title=#{title},content=#{content},typeId=#{typeId},
+        attachmentId=#{attachmentId},pubTime=now()
+        where id=#{id}
+    </update>
+
+	<select id="getPublishInfo" parameterType="java.util.Map" 
+			resultType="com.crm.entity.PublishInfoPresent">
+		select a.id,a.oid,b.oname,a.title,a.content,a.typeId,a.attachmentId,a.stopFlag,
+			DATE_FORMAT(a.pubTime,'%Y-%m-%d %H:%i:%S') as pubDate
+		from PUBLISH_INFO a
+		left join ORG_CD b on a.oid=b.oid
+		where 
+		<if test=" 0 != oid">
+			a.oid = #{oid} and 
+		</if>
+		a.flag=1 and a.typeId=#{typeId} order by a.id desc
+		limit #{startIndex},#{rows}
+	</select>
+	
+	<select id="getTotalPublishInfo" parameterType="java.util.Map" 
+			resultType="int" >
+		select count(*) from PUBLISH_INFO 
+		where   flag=1 and oid = #{oid}  and typeId=#{typeId}
+	</select>
+
+	<select id="getSearchInfo" parameterType="java.util.Map" 
+			resultType="com.crm.entity.PublishInfoPresent">
+		select a.id,a.oid,b.oname,a.title,a.content,a.typeId,a.attachmentId,a.stopFlag,
+			DATE_FORMAT(a.pubTime,'%Y-%m-%d %H:%i:%S') as pubDate
+		from PUBLISH_INFO a
+		left join ORG_CD b on a.oid=b.oid
+		where 
+		<if test=" 0 != oid">
+			a.oid = #{oid} and 
+		</if>
+		a.title like CONCAT('%',#{psi.searchParam},'%') and 
+		a.flag=1 and a.typeId=#{typeId} order by a.id desc
+		limit #{startIndex},#{rows}
+	</select>
+	
+	<select id="getTotalSearchInfo" parameterType="java.util.Map" 
+			resultType="int" >
+		select count(*) from PUBLISH_INFO 
+		where   
+		title like CONCAT('%',#{psi.searchParam},'%') and 
+		flag=1 and oid = #{oid}  and typeId=#{typeId}
+	</select>
+
+	<select id="getPublishInfoById" parameterType="Integer" 
+			resultType="com.crm.entity.PublishInfoPresent">
+		select a.id,a.oid,b.oname,a.title,a.content,a.typeId,a.attachmentId,a.stopFlag,
+			DATE_FORMAT(a.pubTime,'%Y-%m-%d %H:%i:%S') as pubDate
+		from PUBLISH_INFO a
+		left join ORG_CD b on a.oid=b.oid
+		where  a.id = #{id}
+	</select>
+</mapper>

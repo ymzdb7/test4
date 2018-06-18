@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.crm.mapper.WorkTypeMapper">
+
+    <!-- 就业状况编码表对应的结果映射  -->
+    <resultMap type="com.crm.entity.WorkType" id="workTypeResult">
+		 <id property="id" column="ID"/>
+         <result property="type_name" column="type_name"/>
+	</resultMap>
+
+ 	<select id="getAllWorkType" resultType="list" resultMap="workTypeResult"  flushCache="true">
+        select id,type_name from WORK_CD where flag=1
+    </select>
+
+ 	<select id="getWorkType" resultType="String" parameterType="int" resultMap="workTypeResult">
+        select type_name from WORK_CD where flag=1 and id=#{id}
+    </select>
+
+</mapper>

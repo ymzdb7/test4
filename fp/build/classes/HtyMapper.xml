@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.crm.mapper.HtyMapper">
+	
+	<select id="getHtyAssistInfoByPid" parameterType="int"
+		resultType="com.crm.entity.HtyPresent">
+		select a.id,b.fid,b.holderName,a.pid,b.pname,a.illnessName,a.hospital,a.cost,
+		b.relationType, b.relationTypeName,
+		DATE_FORMAT(a.payment_time,'%Y-%m-%d') as paymentTime,a.descb
+		from HEATHLY_ASSIST_INFO a,
+		(
+			select a1.pid as fid,a1.pname as holderName,a2.pid,a2.pname ,
+			a2.relationType,a3.type_name as relationTypeName
+			from USER_INFO a1,USER_INFO a2,RELATION_CD a3
+			where a1.pid=a2.isHolder and a1.pid=a1.isHolder and a1.isUsed=1 and a2.isUsed=1
+			and a2.pid = #{pid} and a2.relationType=a3.id
+		) b
+		where a.flag=1 and a.pid=b.pid order by b.fid desc,a.pid desc,paymentTime
+	</select>
+
+	<select id="getAllHtyAssistInfo" parameterType="java.util.Map"
+		resultType="com.crm.entity.HtyPresent">
+		select a.id,b.fid,b.holderName,a.pid,b.pname,a.illnessName,a.hospital,a.cost,
+		b.relationType, b.relationTypeName,
+		DATE_FORMAT(a.payment_time,'%Y-%m-%d') as paymentTime,a.descb
+		from HEATHLY_ASSIST_INFO a,
+		(
+			select a1.pid as fid,a1.pname as holderName,a2.pid,a2.pname ,
+			a2.relationType,a3.type_name as relationTypeName
+			from USER_INFO a1,USER_INFO a2 ,RELATION_CD a3
+			where a1.pid=a2.isHolder and a1.pid=a1.isHolder and a1.isUsed=1 and a2.isUsed=1
+			and a2.relationType=a3.id
+		<if test=" null != did">
+			and a2.did in
+			<foreach item="item" index="index" collection="did" 
+				open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		) b
+		where a.flag=1 and a.pid=b.pid order by b.fid,a.pid,paymentTime
+		limit #{startIndex},#{rows}
+	</select>
+
+	<select id="getTotalHtyAssistInfo" parameterType="java.util.Map" resultType="int">
+		select count(*)
+		from HEATHLY_ASSIST_INFO a,
+		(
+			select a1.pid as fid,a1.pname as holderName,a2.pid,a2.pname 
+			from USER_INFO a1,USER_INFO a2 
+			where a1.pid=a2.isHolder and a1.pid=a1.isHolder and a1.isUsed=1 and a2.isUsed=1
+			and a2.did in
+			<foreach item="item" index="index" collection="did" 
+				open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		) b
+		where a.flag=1 and a.pid=b.pid
+	</select>
+	
+	<select id="getSearchHtyAssistInfo" parameterType="java.util.Map"
+		resultType="com.crm.entity.HtyPresent">
+		select a.id,b.fid,b.holderName,a.pid,b.pname,a.illnessName,a.hospital,a.cost,
+		b.relationType, b.relationTypeName,
+		DATE_FORMAT(a.payment_time,'%Y-%m-%d') as paymentTime,a.descb
+		from HEATHLY_ASSIST_INFO a,
+		(
+			select a1.pid as fid,a1.pname as holderName,a2.pid,a2.pname ,
+			a2.relationType,a3.type_name as relationTypeName
+			from USER_INFO a1,USER_INFO a2 ,RELATION_CD a3
+			where a1.pid=a2.isHolder and a1.pid=a1.isHolder and a1.isUsed=1 and a2.isUsed=1
+			and a2.relationType=a3.id
+		<if test=" null != did">
+			and a2.did in
+			<foreach item="item" index="index" collection="did" 
+				open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		) b
+		where a.flag=1 and a.pid=b.pid 
+			and CONCAT(b.pname,b.holderName,a.hospital) like CONCAT('%',#{hsi.searchhname},'%')
+		order by b.fid,a.pid,paymentTime
+		limit #{startIndex},#{rows}
+	</select>
+
+	<select id="getTotalSearchHtyAssistInfo" parameterType="java.util.Map" resultType="int">
+		select count(*)
+		from HEATHLY_ASSIST_INFO a,
+		(
+			select a1.pid as fid,a1.pname as holderName,a2.pid,a2.pname 
+			from USER_INFO a1,USER_INFO a2 
+			where a1.pid=a2.isHolder and a1.pid=a1.isHolder and a1.isUsed=1 and a2.isUsed=1
+			and a2.did in
+			<foreach item="item" index="index" collection="did" 
+				open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		) b
+		where a.flag=1 and a.pid=b.pid
+			and CONCAT(b.pname,b.holderName,a.hospital) like CONCAT('%',#{hsi.searchhname},'%')
+	</select>
+
+	<insert id="addHtyAssistInfo" parameterType="com.crm.entity.Hty" >
+		insert into HEATHLY_ASSIST_INFO(pid,illnessName,hospital,cost,payment_time,descb)
+		value(#{pid},#{illnessName},#{hospital},#{cost},#{payment_time},#{descb})
+	</insert>
+		
+    <update id="updateHtyAssistInfo" parameterType="com.crm.entity.Hty" >
+        update HEATHLY_ASSIST_INFO set pid=#{pid},illnessName=#{illnessName},
+        hospital=#{hospital},cost=#{cost},payment_time=#{payment_time},descb=#{descb} 
+        where id = #{id}
+    </update>	
+
+    <update id="deleteHtyAssistInfo" parameterType="int" >
+        update HEATHLY_ASSIST_INFO set flag=0 
+        where id = #{id}
+    </update>	
+</mapper>

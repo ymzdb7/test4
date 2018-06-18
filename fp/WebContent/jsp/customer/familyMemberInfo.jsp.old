@@ -1,0 +1,531 @@
+<%@ page language="java" contentType="text/html; charset=utf-8" pageEncoding="UTF-8"%>
+<%
+    String path = request.getContextPath();
+    String basePath = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort()+ path ;
+	String holder = request.getParameter("holder");
+    //System.out.println("basePath = "+basePath);
+%>
+<html>
+<link rel="stylesheet" type="text/css" href="<%=basePath %>/resource/easyui/jquery-easyui-1.5/themes/gray/easyui.css"/>
+<link rel="stylesheet" type="text/css" href="<%=basePath %>/resource/easyui/jquery-easyui-1.5/themes/icon.css"/>
+<script type="text/javascript" src="<%=basePath %>/resource/easyui/jquery-easyui-1.5/jquery.min.js"></script>
+<script type="text/javascript" src="<%=basePath %>/resource/easyui/jquery-easyui-1.5/jquery.easyui.min.js"></script>
+<script type="text/javascript" src="<%=basePath %>/resource/easyui/jquery-easyui-1.5/locale/easyui-lang-zh_CN.js"></script>
+<script src="<%=basePath %>/resource/js/validator.js" type="text/javascript"></script>
+<link rel="stylesheet" type="text/css" href="<%=basePath %>/resource/easyui/easyui-ext/icons/icon-standard.css"/>
+<link rel="stylesheet" type="text/css" href="<%=basePath %>/resource/css/fpcss.css"/>
+<script type="text/javascript" src="<%=basePath %>/resource/easyui/easyui-ext/icons/icon-standard.js"></script>
+</html>
+<body style="margin: 1px">
+<script>
+var flaged_info='';
+$(function(){
+	$('#datagrid_customer_info').datagrid({
+        url:'<%=basePath%>/cust/familyMemberInfo.do?holder='+<%=holder%>,
+        singleSelect:true,   //只允许选中一行
+        //height:$('#tabs').height() - 50 - $('#btn').height(),
+        pagination:true,   //在数据网格（datagrid）底部显示分页工具栏
+        rownumbers:true,   //显示带有行号的列
+        //selectOnCheck:true,  //如果设置为 true，点击复选框将会选中该行。如果设置为 false，选中该行将不会选中复选框。
+        //pagePosition:both,	//定义分页栏的位置。可用的值有：'top'、'bottom'、'both'
+        pageSize:20,			//每页显示的记录条数
+        pageList:[10,20,30,50,100,200],
+        fitColumns:true, //自适应列的宽度
+        striped:true,   //行条纹化。（即奇偶行使用不同背景色）
+        nowrap:true,    //把数据显示在一行。即不换行
+        toolbar : $("#tb"),
+        columns:[[
+            {field:'isSelected',title:'操作',hidden:false,checkbox:true},
+            {field:'pid',title:'编号'},
+            {field:'pname',title:'姓名',width:50},
+            {field:'did',title:'部门编号',hidden:true},
+            {field:'dname',title:'部门名称'},
+            {field:'sex',title:'sex',width:30,hidden:true},
+            {field:'sexName',title:'性别',width:30},
+            {field:'relationType',title:'户主关系',width:40,hidden:true},
+            {field:'relationTypeName',title:'户主关系',width:40},
+            {field:'phone',title:'手机',width:70},
+            {field:'cid',title:'身份证号码',width:100},
+            {field:'workType',title:'工作状况',width:40,hidden:true},
+            {field:'workTypeName',title:'工作状况',width:40},
+            {field:'marriedType',title:'婚姻状况',width:40,hidden:true},
+            {field:'marriedTypeName',title:'婚姻状况',width:40},
+            {field:'healthyType',title:'健康状况',width:40,hidden:true},
+            {field:'healthyTypeName',title:'健康状况',width:40},
+            {field:'isHolder',title:'是否户主',width:40,hidden:true},
+            {field:'fid',title:'户号',width:40,hidden:true},
+            {field:'holderName',title:'户主姓名',width:40},
+            {field:'faddr',title:'家庭住址',width:40},
+            {field:'duty',title:'用户类型',width:40},
+            {field:'descb',title:'说明',width:100}
+        ]],
+        onLoadSuccess:function(data){}
+    });
+});
+var url;
+
+function openUserAddDialog() {
+	flaged_info='a';
+    $("#dlg").dialog("open").dialog("setTitle", "添加对象信息");
+    getAllHealthyType();
+    getAllWorkType();
+    getAllRelationType();
+    getDid();
+    getHolder();
+    
+}
+
+function getDid(){
+    $.ajax({
+        url:"<%=basePath %>/cust/getPageDid.do",  
+        dataType:"json", 
+        type:"GET",
+        success:function(data){                                 
+                    //alert(data.id+"\n"+data.type_name);
+                    $('#did').combobox({
+                            data: data,                        
+                            valueField: 'did',
+                            textField: 'dname',
+                            value:data[0].did}
+                            );                       
+ 		             	    //alert("getDid\tflaged_info="+flaged_info);
+			       	   	    if (flaged_info == "m"){
+			       	    	    var selectedRows = $("#datagrid_customer_info").datagrid("getSelections");
+			       	    	    if (selectedRows.length != 1) {
+			       	    	        return;
+			       	    	    }
+			       	    	    var row = selectedRows[0];
+			       		    	//alert("row.did="+row.did);
+			       	           $("#did").combobox("setValue", row.did);
+			       	   	    }
+       }
+    })
+}
+
+function getAllHealthyType(){
+	
+    $.ajax({
+        url:"<%=basePath %>/cust/getAllHealthyType.do",  
+        dataType:"json", 
+        type:"GET",
+        success:function(data){ 
+        			
+                    //alert(data[0].id+"\n"+data[0].type_name);
+                    $('#healthyType').combobox({
+                            data: data,                        
+                            valueField: 'id',
+                            textField: 'type_name',
+                            value:data[0].id}
+                            );
+							//alert(data.join(','));
+		               	    if (flaged_info == "m"){
+		                	    var selectedRows = $("#datagrid_customer_info").datagrid("getSelections");
+		                	    if (selectedRows.length != 1) {
+		                	        return;
+		                	    }
+		                	    var row = selectedRows[0];
+		            	    	//alert("row.healthyType="+row.healthyType);
+		                	   $("#healthyType").combobox("setValue", row.healthyType);
+		               	    }
+       }
+    })
+}
+function getAllWorkType(){
+    $.ajax({
+        url:"<%=basePath %>/cust/getAllWorkType.do",  
+        dataType:"json", 
+        type:"GET",
+        success:function(data){                                 
+                    $('#workType').combobox({
+                            data: data,                        
+                            valueField: 'id',
+                            textField: 'type_name',
+                            value:data[0].id}
+                            );                       
+		               	    if (flaged_info == "m"){
+		                	    var selectedRows = $("#datagrid_customer_info").datagrid("getSelections");
+		                	    if (selectedRows.length != 1) {
+		                	        return;
+		                	    }
+		                	    var row = selectedRows[0];
+		            	    	//alert("row.workType="+row.workType);
+		            		   $("#workType").combobox("setValue", row.workType);
+		               	    }
+       }
+    })
+}
+function getAllRelationType(){
+    $.ajax({
+        url:"<%=basePath %>/cust/getAllRelationType.do",  
+        dataType:"json", 
+        type:"GET",
+        success:function(data){                                 
+                    $('#relationType').combobox({
+                            data: data,                        
+                            valueField: 'id',
+                            textField: 'type_name',
+                            value:data[0].id}
+                            );                       
+		               	    if (flaged_info == "m"){
+		                	    var selectedRows = $("#datagrid_customer_info").datagrid("getSelections");
+		                	    if (selectedRows.length != 1) {
+		                	        return;
+		                	    }
+		                	    var row = selectedRows[0];
+		            	    	//alert("row.relationType="+row.relationType);
+		                	   $("#relationType").combobox("setValue", row.relationType);
+		               	    }
+       }
+    })
+}
+
+function getHolder(){
+    $.ajax({
+        url:"<%=basePath %>/cust/getHolder.do",  
+        dataType:"json", 
+        type:"GET",
+        success:function(data){                                 
+                    $('#isHolder').combobox({
+                            data: data,                        
+                            valueField: 'hid',
+                            textField: 'hname',
+                            value:data[0].hid}
+                            );                       
+		            	    if (flaged_info == "m"){
+		        	    	    var selectedRows = $("#datagrid_customer_info").datagrid("getSelections");
+		        	    	    if (selectedRows.length != 1) {
+		        	    	        return;
+		        	    	    }
+		        	    	    var row = selectedRows[0];
+		            	    	//alert("row.isHolder="+row.isHolder);
+		        	    	   	$("#isHolder").combobox("setValue", row.isHolder);
+		        	    	}
+       }
+    })
+}
+
+function openUserModifyDialog() {
+    getAllHealthyType();
+    getAllWorkType();
+    getAllRelationType();
+    getDid();
+    getHolder();
+
+    flaged_info = "m";
+    var selectedRows = $("#datagrid_customer_info").datagrid("getSelections");
+    if (selectedRows.length != 1) {
+        $.messager.alert("系统提示", "请选择一条要编辑的数据！");
+        return;
+    }
+    var row = selectedRows[0];
+    $("#dlg").dialog("open").dialog("setTitle", "编辑用户信息");
+    //$("#fm_cust").form("load", row);    	
+    if (flaged_info == 'a') {
+    }else if (flaged_info == 'm') {
+    	//alert("row.pid="+row.pid+"\nrow.pname="+row.pname+"\nrow.cid"+row.cid+"\nrow.phone="+row.phone+"\nrow.sex="+row.sex
+    	//		+"\nrow.marriedType="+row.marriedType+"\nrow.faddr="+row.faddr+"\nrow.descb="+row.descb);
+    	$("#pid").val(row.pid);
+    	$("#pname").val(row.pname);
+    	$("#cid").val(row.cid);
+    	$("#phone").val(row.phone);
+    	$("#sex").combobox("setValue",row.sex);
+        //$("#workType").combobox("setValue", row.workType);
+        //$("#relationType").combobox("setValue", row.relationType);
+        $("#marriedType").combobox("setValue", row.marriedType);
+        //$("#healthyType").combobox("setValue", row.healthyType);
+        //$("#isHolder").combobox("setValue", row.isHolder);
+        //$("#did").combobox("setValue", row.did);
+        $("#faddr").val(row.faddr);
+        $("#descb").val(row.descb);
+    }
+	url = "<%=basePath %>/cust/updateCustumer.do?flaged=" + flaged_info;
+}
+
+function closeUserDialog() {
+    $("#dlg").dialog("close");
+    resetValue();
+}
+
+function saveUser() {
+	
+    $("#fm_cust").form("submit", {
+        url : "<%=basePath %>/cust/addCustomer.do?flaged="+flaged_info,
+        onSubmit: function(data){
+        	//alert('TEST+'+$("#pid").val());
+      		if (checkCidDup()) return false;
+      		if (checkPhoneDup()) return false;
+      		if (checkHolder()) return false;
+      		if (checkPname()) return false;
+			var r = $(this).form("validate");
+			//alert('$(this).form("validate") = '+$(this).form("validate"));
+			return r;
+		},
+        success : function(result) {
+        	var result = eval('(' + result + ')');
+            if (result.success == true || result.success=="true") {
+                $.messager.alert("系统提示", "保存成功！");
+                $("#datagrid_customer_info").datagrid("reload");
+                resetValue();
+                $("#dlg").dialog("close");
+            } else {
+            	if (result.errCode==10001){
+            		$.messager.alert("系统提示", "身份证号码重复！保存失败！");
+            		$("#cid").focus();
+            	}else if (result.errCode== 10002){
+            		$.messager.alert("系统提示", "手机号码重复！保存失败！");
+            		$("#phone").focus();
+            	}else{
+	                $.messager.alert("系统提示", "保存失败！请联系系统管理员！");
+            	}
+                return;
+            }
+        }
+    });
+}
+
+function cidCheck(value) {  
+	return /^\d{15}(\d{2}[A-Za-z0-9])?$/i.test(value);  
+}
+function phoneCheck(value) {  
+    return /^(13|15|18)\d{9}$/i.test(value);   
+}
+function pnameCheck(value){
+	return /^[\Α-\￥]+$/i.test(value); 
+}
+
+function checkHolder(){
+	var ih = $("#isHolder").combobox("getValue");
+	var rt = $("#relationType").combobox("getValue");
+	//alert(ih+"<br/>"+rt);
+	if ((ih == null || ih == "") && (rt != 1 && rt != 13)){
+		$("#isHolder").focus();
+		$.messager.alert("系统提示", "当与户主关系不是工作关系或本人不是户主时，户主必须选择，不能空");
+		return true;
+	}
+}
+
+function checkPname(){
+	if ($("#pname").val() == "") {
+	    $("#pname").focus();
+	    $.messager.alert("系统提示", "姓名为必填项！");
+	    return true;
+	}
+}
+
+function resetValue() {
+    $("#pname").val("");	//用户名    
+    $("#sex").val("");
+    $("#cid").val("");
+    $("#phone").val("");
+    $("#workType").combobox("setValue", "");
+    $("#relationType").combobox("setValue", "");
+    $("#marriedType").combobox("setValue", "");
+    $("#healthyType").combobox("setValue", "");
+    $("#faddr").val("");
+    $("#descb").val("");
+}
+
+function checkCidDup(){
+	//$("#descb").val('');
+	var cid = $("#cid").val();
+	if (!cidCheck(cid)){
+		$.messager.alert("系统提示", "身份证号码格式不对");
+		$("cid").focus(); 
+		return true;
+	} 
+	if (flaged_info == 'a') {
+	    $.ajax({
+	        url:"<%=basePath %>/cust/checkCidDup.do?cid="+cid,  
+	        dataType:"json", 
+	        type:"GET",
+	        success:function(data){  
+				if (data.success=='true'){
+					$.messager.alert("系统提示", "身份证号码已经存在，不能重复");
+					$("cid").focus(); 
+					return true;
+				}
+	       	}
+	    })
+	}
+}
+
+function checkPhoneDup(){
+	var phone = $("#phone").val();
+	
+	if (!phoneCheck(phone)) {
+		$.messager.alert("系统提示", "手机号码格式不正确");
+		$("phone").focus(); 
+		return true;
+	} 
+	if (flaged_info == 'a') {
+	    $.ajax({
+	        url:"<%=basePath %>/cust/checkPhoneDup.do?phone="+phone,  
+	        dataType:"json", 
+	        type:"GET",
+	        success:function(data){
+				if (data.success=='true'){
+					$.messager.alert("系统提示", "手机号码已经存在，不能重复");
+					$("phone").focus(); 
+					return true;
+				}
+	       	}
+	    })
+	}
+}
+
+function deleteUser() {
+    var selectedRows = $("#datagrid_customer_info").datagrid("getSelections");
+    if (selectedRows.length != 1) {
+        $.messager.alert("系统提示", "请选择一条要删除的数据！");
+        return;
+    }
+    var pid = selectedRows[0].pid;
+    var pname = selectedRows[0].pname;
+    $.messager.confirm("系统提示", 
+    		"<font color=red>您确定要"
+	    	+ "<h1  style='display: inline;'>删除</h1>该对象吗？"
+            + "<div style='font-size:5px'><br/></div>"
+            + "<div style='font-size:5px'><br/></div>"
+            + "名称："
+            + "<h2 style='display: inline;'>"+pname + "</h2></font>", 
+            function(r) {
+		        if (r) {
+		            $.post("<%=basePath %>/cust/deleteCustomer.do", {
+		                pid : pid
+		            }, function(result) {
+		                if (result.success) {
+		                    $.messager.alert("系统提示", "\""+pname+"\"数据已成功删除！");
+		                    $("#datagrid_customer_info").datagrid("reload");
+		                } else {
+		                    $.messager.alert("系统提示", "数据删除失败，请联系系统管理员！");
+		                }
+		            }, "json");
+		        }
+		    });
+}
+
+</script>
+
+<div>
+    <table id="datagrid_customer_info"></table>
+</div>
+    <div id="tb">
+        <a href="javascript:openUserAddDialog()" class="easyui-linkbutton"
+            iconCls="icon-add" plain="true">新增</a> 
+        <a  href="javascript:openUserModifyDialog()" class="easyui-linkbutton"
+            iconCls="icon-edit" plain="true">修改</a> 
+        <a  href="javascript:deleteUser()" class="easyui-linkbutton"
+            iconCls="icon-remove" plain="true">删除</a>
+        <div id="dlg-buttons">
+            <a href="javascript:saveUser()" class="easyui-linkbutton"
+                iconCls="icon-ok">保存</a> <a href="javascript:closeUserDialog()"
+                class="easyui-linkbutton" iconCls="icon-cancel">关闭</a>
+        </div>
+        <div id="dlg" class="easyui-dialog"
+            style="top:60px;left:80px;width: 650px;height:370px;padding:10px 10px;" closed="true"
+            buttons="#dlg-buttons">
+            <form method="post" id="fm_cust">
+                <table cellspacing="8px;">
+                    <tr>
+                        <td><div style='font-size:12px'>姓名：</div></td>
+                        <td><input type="text" id="pname" name="pname"
+                            class="easyui-validatebox" validType="chinese"
+                            data-options="required:'true',validType:'chinese'"/>
+                            &nbsp;<span style="color: red">*</span>
+                        </td>
+                        <td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+                        <td><div style='font-size:12px'>性别：</div></td> <!-- 性别。 F-女，M-男 -->
+                        <td><select name="sex" class="easyui-combobox" 
+                            id="sex" style="width: 154px;" editable="false"
+                            panelHeight="auto"  required="true">
+                                <option value="F" >女</option>
+                                <option value="M" selected="selected">男</option>
+                        	</select> 
+                        	&nbsp;<span style="color: red">*</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><div style='font-size:12px'>身份证号码：</div></td>
+                        <td><input type="text" id="cid" name="cid" onblur="checkCidDup()"
+                            class="easyui-validatebox"  validType="idcard"
+                            data-options="required:true,validType:'idcard'"/>
+                            &nbsp;<span style="color: red">*</span>
+                        </td>
+                        <td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+                        <td><div style='font-size:12px'>手机号码：</div></td>
+                        <td><input type="text" id="phone" name="phone"  onblur="checkPhoneDup()"
+                            validType="mobile" class="easyui-validatebox" 
+							data-options="required:true,validType:'mobile'" />
+							&nbsp;<span style="color: red">*</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><div style='font-size:12px'>工作状况：</div></td>
+                        <td><input name="workType" class="easyui-combobox" 
+                            id="workType" style="width: 154px;" editable="false"
+                            panelHeight="auto" required="true">
+							&nbsp;<span style="color: red">*</span>
+                        </td>
+                        <td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+                        <td><div style='font-size:12px'>与户主关系：</div></td>
+                        <td><input name="relationType" class="easyui-combobox" 
+                            id="relationType" style="width: 154px;" editable="false"
+                            panelHeight="auto"  required="true">
+							&nbsp;<span style="color: red">*</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><div style='font-size:12px'>婚姻状况：</div></td><!-- 婚姻状况。0-未婚	1-已婚	2-未知 -->
+                        <td><select name="marriedType" class="easyui-combobox" 
+                            id="marriedType" style="width: 154px;" editable="false"
+                            panelHeight="auto"  required="true">
+                                <option value="0">未婚</option>
+                                <option value="1">已婚</option>
+                                <option value="2" selected="selected">未知</option>
+                        </select> &nbsp;<span style="color: red">*</span>
+                        </td>
+                        <td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+                        <td><div style='font-size:12px'>健康状况：</div></td>
+                        <td><input name="healthyType" class="easyui-combobox" 
+                            id="healthyType" style="width: 154px;" editable="false"
+                            panelHeight="auto"  required="true">
+                            &nbsp;<span style="color: red">*</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><div style='font-size:12px'>所属机构：</div></td> 
+                        <td><div style='font-size:12px'>
+                        	<input name="did" class="easyui-combobox" 
+                            id="did" style="width: 154px;" editable="false"
+                            required="true">
+                            &nbsp;<span style="color: red">*</span>
+                        	</div>
+                        </td>
+                        <td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+                        <td><div style='font-size:12px'>户主：</div></td>
+                        <td><div id="div-holder" name="div-holder" style='font-size:12px'>
+							<input name="isHolder" class="easyui-combobox" 
+                            id="isHolder" style="width: 154px;" editable="false">
+                            &nbsp;<span style="color: red">*</span></div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><div style='font-size:12px'>家庭地址：</div></td>
+                        <td colspan='4'><input type="text" id="faddr" name="faddr" size=75/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><div style='font-size:12px'>说明：</div></td> 
+                        <td colspan=4><div>
+                        	<textarea style='font-size:13px' id="descb" 
+                        		name="descb" rows="1" cols="55" size=90></textarea>
+                        	<input type="text" id="pid" name="pid" value="0" 
+                        		style="display:none" size=5/>
+                        	</div>
+                        </td>
+                    </tr>
+                </table>
+            </form>
+        </div>
+	</div>
+</body>

@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.crm.mapper.ConsultMapper">
+    <update id="saveConsultInfo" parameterType="com.crm.entity.ConsultInfo">
+        update CONSULTATION_INFO
+        set  answer = #{answer} ,ansTime = now() ,aid = #{aid}
+        where id = #{id}
+    </update>
+
+	<update id="evaluation" parameterType="java.util.Map" >
+		update CONSULTATION_INFO 
+			set evaluation = #{evaluation}
+		where id=#{id}
+	</update>
+    
+	<insert id="addConsultInfo" parameterType="com.crm.entity.ConsultInfoPresent" >
+		insert into CONSULTATION_INFO 
+			(pid,subTime,content,isAnony,questionTypeId,oid)
+		value (#{pid},now(),#{content},#{isAnony},#{questionTypeId},#{oid})
+	</insert>
+    
+	<select id="getConsultInfoByPid" parameterType="int" 
+			resultType="com.crm.entity.ConsultInfoPresent">
+		 select a.id,a.pid,b.pname,DATE_FORMAT(a.subTime,'%Y-%m-%d %H:%i:%s') as subDate,
+		 	a.content,a.isAnony,a.questionTypeId,a.oid,a.answer,
+		 	DATE_FORMAT(a.ansTime,'%Y-%m-%d %H:%i:%s') as ansDate,a.aid,
+		 	c.pname as aname,a.evaluation
+		 from CONSULTATION_INFO a
+		 left join USER_INFO b on a.pid=b.pid
+		 left join USER_INFO c on a.aid=c.pid
+		 where a.pid=#{pid} order by a.id desc
+	</select>
+	
+	<select id="getConsultInfoById" parameterType="int" 
+			resultType="com.crm.entity.ConsultInfoPresent">
+		 select a.id,a.pid,b.pname,DATE_FORMAT(a.subTime,'%Y-%m-%d %H:%i:%s') as subDate,
+		 	a.content,a.isAnony,a.questionTypeId,a.oid,a.answer,
+		 	DATE_FORMAT(a.ansTime,'%Y-%m-%d %H:%i:%s') as ansDate,a.aid,
+		 	c.pname as aname,a.evaluation
+		 from CONSULTATION_INFO 
+		 left join USER_INFO b on a.pid=b.pid
+		 left join USER_INFO c on a.aid=c.pid
+		 where a.id=#{id} 
+	</select>
+	
+	<select id="getConsultInfo" parameterType="java.util.Map" 
+			resultType="com.crm.entity.ConsultInfoPresent">
+		 select a.id,a.pid,b.pname,DATE_FORMAT(a.subTime,'%Y-%m-%d %H:%i:%s') as subDate,
+		 	a.content,isAnony,a.questionTypeId,a.oid,a.answer,
+		 	DATE_FORMAT(a.ansTime,'%Y-%m-%d %H:%i:%s') as ansDate,a.aid,
+		 	c.pname as aname,a.evaluation
+		 from CONSULTATION_INFO a
+		 left join USER_INFO b on a.pid=b.pid
+		 left join USER_INFO c on a.aid=c.pid
+		 where a.oid = #{oid} 
+		 <if test="0 == isAns">
+		 	and (a.aid is null || a.aid = 0)
+		 </if>
+		 <if test="1 == isAns">
+		 	and ((a.aid is not null) || a.aid != 0)
+		 </if>
+		order by a.id desc
+		limit #{startIndex},#{rows}
+	</select>
+	
+	<select id="getTotalConsultInfo" parameterType="java.util.Map" 
+			resultType="int" >
+		select count(*) 
+		from CONSULTATION_INFO 
+		where oid = #{oid} 
+		 <if test="0 == isAns">
+		 	and (aid is null || aid = 0)
+		 </if>
+		 <if test="1 == isAns">
+		 	and ((aid is not null) || aid != 0)
+		 </if>
+	</select>
+	
+	<select id="getSearchInfo" parameterType="java.util.Map" 
+			resultType="com.crm.entity.ConsultInfoPresent">
+		 select a.id,a.pid,b.pname,DATE_FORMAT(a.subTime,'%Y-%m-%d %H:%i:%s') as subDate,
+		 	a.content,isAnony,a.questionTypeId,a.oid,a.answer,
+		 	DATE_FORMAT(a.ansTime,'%Y-%m-%d %H:%i:%s') as ansDate,a.aid,
+		 	c.pname as aname,a.evaluation
+		 from CONSULTATION_INFO a
+		 left join USER_INFO b on a.pid=b.pid
+		 left join USER_INFO c on a.aid=c.pid
+		 where a.oid = #{oid} 
+		 <if test="0 == csi.isAns">
+		 	and (a.aid is null || a.aid = 0)
+		 </if>
+		 <if test="1 == csi.isAns">
+		 	and ((a.aid is not null) || a.aid != 0)
+		 </if>
+		 and CONCAT(b.pname,a.content) like CONCAT('%',#{csi.searchParam},'%')
+		order by a.id desc
+		limit #{startIndex},#{rows}
+	</select>
+	
+	<select id="getTotalSearchInfo" parameterType="java.util.Map" 
+			resultType="int" >
+		 select count(*) 
+		 from CONSULTATION_INFO a
+		 left join USER_INFO b on a.pid=b.pid
+		 where a.oid = #{oid} 
+		 <if test="0 == csi.isAns">
+		 	and (a.aid is null  || a.aid = 0)
+		 </if>
+		 <if test="1 == csi.isAns">
+		 	and ((a.aid is not null) || a.aid != 0)
+		 </if>
+		 and CONCAT(b.pname,a.content) like CONCAT('%',#{csi.searchParam},'%')
+	</select>
+	
+	<select id="getConsultType"  resultType="com.crm.entity.ConsultType" >
+		select * from CONSULT_TYPE_CD 
+	</select>
+</mapper>

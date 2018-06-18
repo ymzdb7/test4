@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration
+  PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+    <!--引入外部配置文件
+    <properties resource="jdbc.properties"/>
+    <cache eviction="LRU" flushInterval="60000" size="512" readOnly="true" />
+    -->
+    <!--开启驼峰命名法 -->
+    <settings>
+        <setting name="mapUnderscoreToCamelCase" value="true"/>
+       <!--  <setting name="logImpl" value="STDOUT_LOGGING"/> -->
+    </settings>   
+   
+    <!--myBatis可以配置多种运行环境-->
+    <!--default可以设置运行那种环境给开发和测试人员不同的运行环境-->
+    <!--可以达到快速切换运环境-->
+    <!-- 
+    <environments default="dev_mysql">
+        <environment id="dev_mysql">
+            <transactionManager type="JDBC"/>
+            <dataSource type="POOLED">
+                <property name="driver" value="${mysql.driver}"/>
+                <property name="url" value="${mysql.url}"/>
+                <property name="username" value="${mysql.username}"/>
+                <property name="password" value="${mysql.password}"/>
+            </dataSource>
+        </environment>
+    </environments>
+    -->   
+    <!--将我们写好的sql映射文件一定要注册到全局配置文件里面-->
+    <!--推荐重要的写在xml中，简单不重要的可以注解设置-->
+<!--     <mappers>
+        <mapper resource="com/crm/mapper/*.xml"/>
+        基于注解配置,需要mapper接口和映射文件同包名
+        <mapper class="com.flx.mybatis.guigu.employee.dao.EmployeeMapperAnnotation"/>
+        批量注册映射,需要mapper接口和映射文件同包名
+        <package name="com.flx.mybatis.mapper"/>
+        为了达到同包名同类名的效果而且不影响项目架构的美观，可以采取一种方案：
+        将配置文件的config下面建立和要影射的mapper接口类包名相同，这样编译时候可以达到同样的效果
+    </mappers>	
+ -->
+ </configuration>

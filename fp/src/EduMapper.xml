@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.crm.mapper.EduMapper">
+
+	<select id="getAllEduPhaseType" parameterType="java.util.Map"
+		resultType="com.crm.entity.EduPhaseType">
+		select * from EDU_PHASE_CD
+	</select>
+	
+	<select id="getEduAssistInfoByPid" parameterType="int"
+		resultType="com.crm.entity.EduAssistPresent">
+		select a.id,a.pid,a.eid,a.eschool,a.eclassName,a.ecost,
+		b.relationType, b.relationTypeName,
+		DATE_FORMAT(a.payment_time,'%Y-%m-%d') as paymentTime,a.descb,
+		b.fid,b.holderName,b.pname,c.phase as phaseName
+		from EDU_ASSIST_INFO a,
+		(
+			select a1.pid as fid,a1.pname as holderName,a2.pid,a2.pname ,
+			a2.relationType,a3.type_name as relationTypeName
+			from USER_INFO a1,USER_INFO a2 ,RELATION_CD a3
+			where a1.pid=a2.isHolder and a1.pid=a1.isHolder and a1.isUsed=1 and a2.isUsed=1
+			and a2.pid = #{pid} and a2.relationType=a3.id
+		) b, EDU_PHASE_CD c
+		where a.flag=1 and a.pid=b.pid and a.eid=c.eid order by b.fid desc,a.pid desc,paymentTime
+	</select>
+	
+	<select id="getAllEduAssistInfo" parameterType="java.util.Map"
+		resultType="com.crm.entity.EduAssistPresent">
+		select a.id,a.pid,a.eid,a.eschool,a.eclassName,a.ecost,
+		b.relationType, b.relationTypeName,
+		DATE_FORMAT(a.payment_time,'%Y-%m-%d') as paymentTime,a.descb,
+		b.fid,b.holderName,b.pname,c.phase as phaseName
+		from EDU_ASSIST_INFO a,
+		(
+			select a1.pid as fid,a1.pname as holderName,a2.pid,a2.pname ,
+			a2.relationType,a3.type_name as relationTypeName
+			from USER_INFO a1,USER_INFO a2 ,RELATION_CD a3
+			where a1.pid=a2.isHolder and a1.pid=a1.isHolder and a1.isUsed=1 and a2.isUsed=1
+			and a2.relationType=a3.id
+		<if test=" null != did">
+			and a2.did in
+			<foreach item="item" index="index" collection="did" 
+				open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		) b, EDU_PHASE_CD c
+		where a.flag=1 and a.pid=b.pid and a.eid=c.eid order by b.fid desc,a.pid desc,paymentTime
+		limit #{startIndex},#{rows}
+	</select>
+
+	<select id="getTotalEduAssistInfo" parameterType="java.util.Map" resultType="int">
+		select count(*)
+		from EDU_ASSIST_INFO a,
+		(
+			select a1.pid as fid,a1.pname as holderName,a2.pid,a2.pname 
+			from USER_INFO a1,USER_INFO a2 
+			where a1.pid=a2.isHolder and a1.pid=a1.isHolder and a1.isUsed=1 and a2.isUsed=1
+			and a2.did in
+			<foreach item="item" index="index" collection="did" 
+				open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		) b, EDU_PHASE_CD c
+		where a.flag=1 and a.pid=b.pid and a.eid=c.eid
+	</select>
+	
+	<select id="getSearchEduInfo" parameterType="java.util.Map"
+		resultType="com.crm.entity.EduAssistPresent">
+		select a.id,a.pid,a.eid,a.eschool,a.eclassName,a.ecost,
+		b.relationType, b.relationTypeName,
+		DATE_FORMAT(a.payment_time,'%Y-%m-%d') as paymentTime,a.descb,
+		b.fid,b.holderName,b.pname,c.phase as phaseName
+		from EDU_ASSIST_INFO a,
+		(
+			select a1.pid as fid,a1.pname as holderName,a2.pid,a2.pname ,
+				a2.relationType,a3.type_name as relationTypeName
+			from USER_INFO a1,USER_INFO a2 ,RELATION_CD a3
+			where a1.pid=a2.isHolder and a1.pid=a1.isHolder and a1.isUsed=1 and a2.isUsed=1
+			and a2.relationType=a3.id
+			<if test=" null != did">
+				and a2.did in
+				<foreach item="item" index="index" collection="did" 
+					open="(" separator="," close=")">
+					#{item}
+				</foreach>
+			</if>
+		) b, EDU_PHASE_CD c
+		where a.flag=1 and a.pid=b.pid and a.eid=c.eid 
+			and CONCAT(b.pname,b.holderName,a.eschool) like CONCAT('%',#{esi.searchhname},'%')
+		order by b.fid desc,a.pid desc,paymentTime
+		limit #{startIndex},#{rows}
+	</select>
+
+	<select id="getTotalSearchEduInfo" parameterType="java.util.Map" resultType="int">
+		select count(*)
+		from EDU_ASSIST_INFO a,
+		(
+			select a1.pid as fid,a1.pname as holderName,a2.pid,a2.pname 
+			from USER_INFO a1,USER_INFO a2 
+			where a1.pid=a2.isHolder and a1.pid=a1.isHolder and a1.isUsed=1 and a2.isUsed=1
+			and a2.did in
+			<foreach item="item" index="index" collection="did" 
+				open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		) b, EDU_PHASE_CD c
+		where a.flag=1 and a.pid=b.pid and a.eid=c.eid
+			and CONCAT(b.pname,b.holderName,a.eschool) like CONCAT('%',#{esi.searchhname},'%')
+	</select>
+	
+	<insert id="addEduAssistInfo" parameterType="com.crm.entity.EduAssist" >
+		insert into EDU_ASSIST_INFO(pid,eid,eschool,eclassName,ecost,payment_time,descb)
+		value(#{pid},#{eid},#{eschool},#{eclassName},#{ecost},#{payment_time},#{descb})
+	</insert>
+		
+    <update id="updateEduAssistInfo" parameterType="com.crm.entity.EduAssist" >
+        update EDU_ASSIST_INFO set pid=#{pid},eid=#{eid},eschool=#{eschool},
+        eclassName=#{eclassName},ecost=#{ecost},payment_time=#{payment_time},descb=#{descb} 
+        where flag = 1 and id = #{id}
+    </update>	
+
+    <update id="deleteEduAssistInfo" parameterType="int" >
+        update EDU_ASSIST_INFO set flag=0 
+        where id = #{id}
+    </update>	
+</mapper>
